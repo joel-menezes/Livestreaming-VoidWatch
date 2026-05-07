@@ -31,23 +31,21 @@ def detectBlank() -> bool:
 
 def main() -> None:
     while True:
-        current_projection = client.get_current_program_scene()
+        current_projection = client.get_current_program_scene().scene_name
         current_saved = client.get_current_preview_scene().scene_name
         blank = detectBlank()
-        _id = client.get_scene_item_id(current_projection.scene_name, SLIDES).scene_item_id
-        change_state = client.get_scene_item_enabled(current_projection.scene_name, _id).scene_item_enabled
+        _id = client.get_scene_item_id(current_projection, SLIDES).scene_item_id
+        change_state = client.get_scene_item_enabled(current_projection, _id).scene_item_enabled
         
-        
+    
         if change_state == blank:
-                
-                client.set_current_preview_scene(current_projection.scene_name)
+            client.set_current_preview_scene(current_projection)
+            client.set_scene_item_enabled(current_projection, _id, not blank)
+            client.set_current_program_scene(current_projection)
+            client.set_current_preview_scene(current_saved)
+            current_projection = client.get_current_program_scene().scene_name
+            client.set_current_program_scene(current_projection)
 
-                client.set_scene_item_enabled(current_projection.scene_name, _id, not blank)
-
-                client.set_current_program_scene(current_projection.scene_name)
-                client.set_current_preview_scene(current_saved)
-
-      
 
         time.sleep(0.2)
 
