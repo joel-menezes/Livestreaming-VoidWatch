@@ -3,12 +3,16 @@ import time
 import base64
 import io
 from PIL import Image, ImageStat
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 HOST = "localhost"
 PORT = 4455
-PASSWORD = ""
-SLIDES = "Target Element"
-VIEWER = "Slides"
+PASSWORD = os.getenv("password")
+SLIDES = "Target Element" # Source element that will be hidden/unhidden
+VIEWER = "Slides" # Monitoring Source
 
 client = obs.ReqClient(host=HOST, port=PORT, password=PASSWORD)
 
