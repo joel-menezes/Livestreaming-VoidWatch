@@ -25,33 +25,38 @@ def detectBlank() -> bool:
         img = Image.open(io.BytesIO(image_bytes)).convert('L')
 
         stat = ImageStat.Stat(img)
-        average = stat.mean[0]
+        average = stat.stddev[0]
 
         return average < 5.0
 
     except Exception as e:
         print(f"Error Detecting slide: {e}")
-
+        return False
 
 def main() -> None:
     while True:
-        current_projection = client.get_current_program_scene().scene_name
-        current_saved = client.get_current_preview_scene().scene_name
-        blank = detectBlank()
-        _id = client.get_scene_item_id(current_projection, SLIDES).scene_item_id
-        change_state = client.get_scene_item_enabled(current_projection, _id).scene_item_enabled
-        
-    
-        if change_state == blank:
-            client.set_current_preview_scene(current_projection)
-            client.set_scene_item_enabled(current_projection, _id, not blank)
-            client.set_current_program_scene(current_projection)
-            client.set_current_preview_scene(current_saved)
+        try:
             current_projection = client.get_current_program_scene().scene_name
-            client.set_current_program_scene(current_projection)
+            current_saved = client.get_current_preview_scene().scene_name
+            blank = detectBlank()
+            _id = client.get_scene_item_id(current_projection, SLIDES).scene_item_id
+            change_state = client.get_scene_item_enabled(current_projection, _id).scene_item_enabled
+            
+        
+            if change_state == blank:
+                client.set_current_preview_scene(current_projection)
+                client.set_scene_item_enabled(current_projection, _id, not blank)
+                client.set_current_program_scene(current_projection)
+                client.set_current_preview_scene(current_saved)
+                current_projection = client.get_current_program_scene().scene_name
+                client.set_current_program_scene(current_projection)
+        except KeyboardInterrupt as e:
+            break
+        except Exception as e:
+            print("Error")
+            time.sleep(2)
 
-
-        time.sleep(0.2)
+        time.sleep(0.5)
 
 if __name__ == "__main__":
     main()
