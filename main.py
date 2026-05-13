@@ -1,4 +1,5 @@
 import obsws_python as obs
+from obsws_python.error import OBSSDKError, OBSSDKRequestError
 import time
 import base64
 import io
@@ -39,21 +40,27 @@ def main() -> None:
             current_projection = client.get_current_program_scene().scene_name
             current_saved = client.get_current_preview_scene().scene_name
             blank = detectBlank()
-            _id = client.get_scene_item_id(current_projection, SLIDES).scene_item_id
-            change_state = client.get_scene_item_enabled(current_projection, _id).scene_item_enabled
+            items = [item["sourceName"] for item in client.get_scene_item_list(current_projection).scene_items]
             
-        
-            if change_state == blank:
-                client.set_current_preview_scene(current_projection)
-                client.set_scene_item_enabled(current_projection, _id, not blank)
-                client.set_current_program_scene(current_projection)
-                client.set_current_preview_scene(current_saved)
-                current_projection = client.get_current_program_scene().scene_name
-                client.set_current_program_scene(current_projection)
+            if VIEWER in items:
+                change_state = client.get_scene_item_enabled(current_projection, _id).scene_item_enabled
+                if change_state == blank:
+                    _id = client.get_scene_item_id(current_projection, SLIDES).scene_item_id
+                    client.set_current_preview_scene(current_projection)
+                    client.set_scene_item_enabled(current_projection, _id, not blank)
+                    client.trigger_studio_mode_transition()
+                    client.set_current_preview_scene(current_saved)
+
+                
         except KeyboardInterrupt as e:
             break
+        except OBSSDKRequestError:
+            print("Error: Request Error")
+        except OBSSDKError as e:
+            print("Error: OBS is not ready")
+            time.sleep(2)
         except Exception as e:
-            print("Error")
+            print(f"Error: {e}")
             time.sleep(2)
 
         time.sleep(0.5)
