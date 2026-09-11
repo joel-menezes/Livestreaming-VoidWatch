@@ -14,7 +14,8 @@ PORT = 4455
 PASSWORD = os.getenv("password")
 SLIDES = "Target Element" # Source element that will be hidden/unhidden
 VIEWER = "Slides" # Monitoring Source
-
+CONTROLS = "[CONTROLS]"
+OVERRIDE = "TOGGLE"
 client = obs.ReqClient(host=HOST, port=PORT, password=PASSWORD)
 
 
@@ -35,7 +36,22 @@ def detectBlank() -> bool:
         return False
 
 def main() -> None:
+    is_override = False
+    override_id = 0
+    response = client.get_scene_list()
+    for scene in response.scenes:
+        if scene["sceneName"] == CONTROLS:
+            for control in client.get_scene_item_list(CONTROLS).scene_items:
+                if control["sourceName"] == OVERRIDE:
+                    is_override = True
+                    override_id = control["sceneItemId"]
+            break
+
+
     while True:
+        if is_override and client.get_scene_item_enabled(CONTROLS, override_id).scene_item_enabled:
+            time.sleep(0.2)
+            continue
         try:
             current_projection = client.get_current_program_scene().scene_name
             current_saved = client.get_current_preview_scene().scene_name
@@ -55,6 +71,7 @@ def main() -> None:
                     client.set_scene_item_enabled(current_projection, _id, not blank)
                     client.trigger_studio_mode_transition()
                     client.set_current_preview_scene(current_saved)
+                    
 
                 
         except KeyboardInterrupt as e:
