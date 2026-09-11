@@ -4,15 +4,15 @@
 ## Setup
 In OBS, Non-Safe Mode, Select Tools --> WebSocket Server Settings
 
-![WebSocket Server Settings](image-2.png)
+![WebSocket Server Settings](Assets/image-2.png)
 
 On This page, Select enable WebSocket Server, also go ahead and copy the server password, then hit apply and ok.
 
-![WebSocket Server Settings Panel](image-3.png)
+![WebSocket Server Settings Panel](Assets/image-3.png)
 
 In an .env file that you will create, paste the password you previously copied.
 
-![.env](image-4.png)
+![.env](Assets/image-4.png)
 
 Finally Locate these lines
 
@@ -31,6 +31,6 @@ While livestreaming, the Powerpoint link can sometimes be faster than the reacti
 
 VoidWatch refreshes every 0.2 seconds, checking a specific view to see if the slides are blank or not. Enabling the computer to automatically change the slides faster than a human can.
 
-![None-Black Square](image-1.png)
+![None-Black Square](Assets/image-1.png)
 
-![Black Square](image.png)
+![Black Square](Assets/image.png)
