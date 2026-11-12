@@ -7,8 +7,12 @@ from PIL import Image, ImageStat
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
 
+# =============================
+# Variables and Client Initializers
+# =============================
+
+load_dotenv()
 HOST = "localhost"
 PORT = 4455
 PASSWORD = os.getenv("password")
@@ -18,14 +22,23 @@ CONTROLS = "[CONTROLS]"
 OVERRIDE = "TOGGLE"
 client = obs.ReqClient(host=HOST, port=PORT, password=PASSWORD)
 
+# =============================
+# Blank Slide detector
+# =============================
 
 def detectBlank() -> bool:
+    """
+    detectBlank is used to check if the current image 
+    being received in OBS is a fully black slide.
+    """
     try:
+        # Grabs image file, decodes image data, and then converts to grey scale
         image = client.get_source_screenshot(VIEWER, "png", 160, 90, -1)
         image_data = image.image_data
         image_bytes = base64.b64decode(image_data.split(",")[-1])
         img = Image.open(io.BytesIO(image_bytes)).convert('L')
 
+        # Using Pillow to grab image stats, using Standard Deviation for results.
         stat = ImageStat.Stat(img)
         average = stat.stddev[0]
 
@@ -35,7 +48,13 @@ def detectBlank() -> bool:
         print(f"Error Detecting slide: {e}")
         return False
 
+
+# =============================
+# Main Polling Loop
+# =============================
+
 def main() -> None:
+    # Initial setup of Manual Override Switch
     is_override = False
     override_id = 0
     response = client.get_scene_list()
@@ -47,12 +66,14 @@ def main() -> None:
                     override_id = control["sceneItemId"]
             break
 
-
+    # Main Poll Loop
     while True:
+        # Checks if Override is enabled 
         if is_override and client.get_scene_item_enabled(CONTROLS, override_id).scene_item_enabled:
             time.sleep(0.2)
             continue
         try:
+            # Detects if slide in Program Projection is blank 
             current_projection = client.get_current_program_scene().scene_name
             current_saved = client.get_current_preview_scene().scene_name
             blank = detectBlank()
@@ -65,15 +86,13 @@ def main() -> None:
                 change_state = client.get_scene_item_enabled(current_projection, _id).scene_item_enabled
                 source_activity = client.get_source_active(SLIDES)
                 program_enabled = source_activity.video_active
-
+                
+                # Toggles slide if status has changed
                 if change_state == blank or program_enabled == blank:
                     client.set_current_preview_scene(current_projection)
                     client.set_scene_item_enabled(current_projection, _id, not blank)
                     client.trigger_studio_mode_transition()
-                    client.set_current_preview_scene(current_saved)
-                    
-
-                
+                    client.set_current_preview_scene(current_saved)                
         except KeyboardInterrupt as e:
             break
         except OBSSDKRequestError:
